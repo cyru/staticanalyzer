@@ -1,0 +1,38 @@
+OASISFormat: 0.4
+BuildTools:  ocamlbuild
+BuildDepends: zarith
+Name:        StaticAnalyzer
+Version:     0.1
+Synopsis:    Static analysis project at the ENS.
+Authors:     cyru
+License:     FreeBSD
+
+Library "libs"
+  Path:    libs
+  Modules: Mapext
+
+Library "frontend"
+  Path:         frontend
+  BuildDepends: libs
+  Modules: 
+    Abstract_syntax_tree,
+    Cfg,
+    Cfg_printer,
+    File_parser,
+    Lexer,
+    Parser,
+    Tree_to_cfg
+
+Library "domains"
+  Path:         domains
+  BuildDepends: libs, frontend
+  Modules:
+    Constant_domain,
+    Value_domain,
+    Domain
+            
+
+Executable statan
+  Path:         .
+  BuildDepends: libs, frontend, domains
+  MainIs:       main.ml
