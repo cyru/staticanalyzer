@@ -12,6 +12,7 @@
 
 open Abstract_syntax_tree
 open Cfg
+open Value_domain
   
 module type DOMAIN =
   sig
@@ -51,3 +52,52 @@ module type DOMAIN =
         
   end
 
+
+module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
+
+  module Map = Mapext.Make
+    (struct type t = var let compare v1 v2 = compare v1.var_id v2.var_id end)
+
+  type env = V.t Map.t
+
+  type t = Env of env | Bot
+
+  let init l = Env (List.fold_left (fun env v -> Map.add v (V.const Z.zero) env) Map.empty l)
+
+  let bottom = Bot
+
+  let rec eval env = function
+    | CFG_int_unary (op, e)       -> V.unary (eval env e) op
+    | CFG_int_binary (op, e1, e2) -> V.binary (eval env e1) (eval env e2) op
+    | CFG_int_var v -> 
+        begin match env with 
+        | Bot -> failwith "undefined" 
+        | Env m -> Map.find v m end
+    | CFG_int_const z    -> V.const z
+    | CFG_int_rand (l,h) -> V.rand l h
+  
+  let assign env v e = match env with
+    | Bot   -> failwith "undefined"
+    | Env m -> Env (Map.add v (eval env e) m)
+
+  let guard = failwith "undefined"
+
+  let join a b = match a,b with
+  | Bot,x | x,Bot -> x
+  | Env m, Env n -> Env (Map.map2z (fun _ x y -> V.join x y) m n)
+
+  let widen a b = match a,b with
+  | Bot,x | x,Bot -> x
+  | Env m, Env n -> Env (Map.map2z (fun _ x y -> V.widen x y) m n)
+
+  let subset a b = match a,b with
+  | Bot,Bot       -> true
+  | Bot,_ | _,Bot -> false
+  | Env m, Env n  -> Map.for_all2z (fun _ x y -> V.subset x y) m n
+  
+  let is_bottom = function
+  | Bot -> true
+  | Env e -> Map.is_empty e
+
+  let print ch = failwith "undefined"
+end
