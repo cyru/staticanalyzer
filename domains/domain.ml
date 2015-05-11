@@ -104,12 +104,12 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
         | CFG_bool_const(b) -> CFG_bool_const(not b)
         | CFG_bool_rand -> CFG_bool_rand
       end
-    | CFG_compare(AST_EQUAL,e1,e2) -> CFG_bool_binary(AST_AND, (CFG_compare(AST_LESS_EQUAL,e1,e2)) , (CFG_compare(AST_LESS_EQUAL,e2,e1)))
-    | CFG_compare(AST_NOT_EQUAL,e1,e2) -> CFG_bool_binary(AST_OR, (CFG_compare(AST_LESS_EQUAL,e1,CFG_int_binary(AST_MINUS,e2,CFG_int_const(Z.one)))) , (CFG_compare(AST_LESS_EQUAL,e2,CFG_int_binary(AST_MINUS,e1,CFG_int_const(Z.one)))))
-    | CFG_compare(AST_LESS,e1,e2) -> (CFG_compare(AST_LESS_EQUAL,e1,CFG_int_binary(AST_MINUS,e2,CFG_int_const(Z.one))))
-    | CFG_compare(AST_LESS_EQUAL,e1,e2) ->(CFG_compare(AST_LESS_EQUAL,e1,e2))
-    | CFG_compare(AST_GREATER,e1,e2) -> (CFG_compare(AST_LESS_EQUAL,e2,CFG_int_binary(AST_MINUS,e1,CFG_int_const(Z.one))))
-    | CFG_compare(AST_GREATER_EQUAL,e1,e2) ->(CFG_compare(AST_LESS_EQUAL,e2,e1))
+    | CFG_compare(AST_EQUAL,e1,e2) -> normaliserExpression (CFG_bool_binary(AST_AND, (CFG_compare(AST_LESS_EQUAL,e1,e2)) , (CFG_compare(AST_LESS_EQUAL,e2,e1))))
+    | CFG_compare(AST_NOT_EQUAL,e1,e2) -> normaliserExpression (CFG_bool_binary(AST_OR, (CFG_compare(AST_LESS_EQUAL,e1,CFG_int_binary(AST_MINUS,e2,CFG_int_const(Z.one)))) , (CFG_compare(AST_LESS_EQUAL,e2,CFG_int_binary(AST_MINUS,e1,CFG_int_const(Z.one))))))
+    | CFG_compare(AST_LESS,e1,e2) -> normaliserExpression (CFG_compare(AST_LESS_EQUAL,e1,CFG_int_binary(AST_MINUS,e2,CFG_int_const(Z.one))))
+    | CFG_compare(AST_LESS_EQUAL,e1,e2) ->(CFG_compare(AST_LESS_EQUAL,CFG_int_binary(AST_MINUS,e1,e2),CFG_int_const(Z.zero)))
+    | CFG_compare(AST_GREATER,e1,e2) -> normaliserExpression (CFG_compare(AST_LESS_EQUAL,e2,CFG_int_binary(AST_MINUS,e1,CFG_int_const(Z.one))))
+    | CFG_compare(AST_GREATER_EQUAL,e1,e2) -> normaliserExpression (CFG_compare(AST_LESS_EQUAL,e2,e1))
         
     | CFG_bool_binary (op, e1, e2) -> CFG_bool_binary (op, normaliserExpression e1, normaliserExpression e2)
     | CFG_bool_const(_) -> e
