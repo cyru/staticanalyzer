@@ -32,6 +32,12 @@ Library "domains"
     Value_domain,
     Domain
 
+Library "iterator"
+  Path: iterator
+  BuildDepends: libs, frontend, domains
+  Modules:
+    Worklist
+
 Executable statan
   Path:         .
   BuildDepends: libs, frontend, domains
