@@ -99,5 +99,10 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
   | Bot -> true
   | Env e -> Map.is_empty e
 
-  let print ch = failwith "undefined"
+  let print ch = function
+  | Bot   -> Printf.fprintf ch "Bot"
+  | Env m -> 
+      Printf.fprintf ch "Environment:\n";
+      Map.iter (fun v i -> Cfg_printer.print_var ch v; Printf.fprintf ch " ";
+                           V.print ch i; Printf.fprintf ch "\n") m;
 end

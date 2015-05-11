@@ -28,9 +28,9 @@ Library "domains"
   BuildDepends: libs, frontend
   Modules:
     Constant_domain,
+    Interval_domain,
     Value_domain,
     Domain
-            
 
 Executable statan
   Path:         .
