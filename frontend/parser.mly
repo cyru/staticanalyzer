@@ -1,3 +1,5 @@
+%{
+
 (*
   Cours "Sémantique et Application à la Vérification de programmes"
   
@@ -13,7 +15,6 @@
   if-then-else constructs. The resolution picked by menhir should be correct.
  *)
 
-%{
 open Abstract_syntax_tree
 %}
 
