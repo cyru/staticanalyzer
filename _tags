@@ -1,0 +1,46 @@
+# OASIS_START
+# DO NOT EDIT (digest: 333bcfd47f36efaa9ab4ded429dae335)
+# Ignore VCS directories, you can use the same kind of rule outside
+# OASIS_START/STOP if you want to exclude directories that contains
+# useless stuff for the build process
+true: annot, bin_annot
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic
+# Library libs
+"libs/libs.cmxs": use_libs
+<libs/*.ml{,i,y}>: pkg_zarith
+# Library frontend
+"frontend/frontend.cmxs": use_frontend
+<frontend/*.ml{,i,y}>: pkg_zarith
+<frontend/*.ml{,i,y}>: use_libs
+# Library domains
+"domains/domains.cmxs": use_domains
+<domains/*.ml{,i,y}>: pkg_zarith
+<domains/*.ml{,i,y}>: use_frontend
+<domains/*.ml{,i,y}>: use_libs
+# Library iterator
+"iterator/iterator.cmxs": use_iterator
+<iterator/*.ml{,i,y}>: pkg_zarith
+<iterator/*.ml{,i,y}>: use_domains
+<iterator/*.ml{,i,y}>: use_frontend
+<iterator/*.ml{,i,y}>: use_libs
+# Executable statan
+"main.byte": pkg_zarith
+"main.byte": use_domains
+"main.byte": use_frontend
+"main.byte": use_libs
+<*.ml{,i,y}>: pkg_zarith
+<*.ml{,i,y}>: use_domains
+<*.ml{,i,y}>: use_frontend
+<*.ml{,i,y}>: use_libs
+# OASIS_STOP
+
+true: use_menhir
