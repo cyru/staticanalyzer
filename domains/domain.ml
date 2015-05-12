@@ -207,6 +207,24 @@ type bool_expr =
 *)
 
 
+  type 'a annoted = 'a * V.t
+  type int_expr_annoted =
+  | ANN_int_unary of int_unary_op * (int_expr_annoted annoted)
+  | ANN_int_binary of int_binary_op * (int_expr_annoted annoted) * (int_expr_annoted annoted)
+  | ANN_int_var of var
+  | ANN_int_const of Z.t
+  | ANN_int_rand of (Z.t (* lower bound *) * Z.t (* upper bound *))
+
+  let rec topdown_expr (e:int_expr) (env:t) : int_expr_annoted annoted = match e with
+  | CFG_int_unary (op, e1) -> let (e1p, abs) = topdown_expr e1 env in (ANN_int_unary(op, (e1p,abs)) ,V.unary abs op)
+  | CFG_int_binary (op, e1, e2) -> let (e1p,abs1) = topdown_expr e1 env in let (e2p, abs2) = topdown_expr e2 env in (ANN_int_binary(op,(e1p, abs1),(e2p, abs2)),V.binary abs1 abs2 op)
+  | CFG_int_var(v) -> begin match env with
+    |Bot -> (ANN_int_var(v),V.bottom)
+    |Env (ev) -> (ANN_int_var(v),try Map.find v ev with |_ -> V.bottom) (*WHAT TODO ? V.bottom or fail miserably ?*) end
+  | CFG_int_const(a) -> (ANN_int_const(a),(V.const a))
+  | CFG_int_rand(low, up) -> (ANN_int_rand(low,up),V.rand low up)
+
+
   let guard = failwith "undefined"
 
   let join a b = match a,b with
