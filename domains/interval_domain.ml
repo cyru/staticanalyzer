@@ -16,6 +16,11 @@ let bound_cmp a b = match a,b with
   | Pinf, _    | _   , Minf -> 1
   | _                       -> -1
 
+let bound_sgn = function
+  | Int a -> Z.sign a
+  | Pinf  -> 1
+  | Minf  -> -1
+
 let bound_neg = function
   | Int a -> Int (Z.neg a)
   | Pinf  -> Minf
@@ -95,6 +100,10 @@ let bottom = Bot
 let const a = Itv(Int a, Int a)
 let rand a b = if Z.leq a b then Itv(Int a, Int b) else Bot
 
+let inf = function Bot -> Pinf | Itv(a,b) -> a
+
+let sup = function Bot -> Minf | Itv(a,b) -> b
+
 let join i j = match i,j with
   | Bot,i | i,Bot -> i
   | Itv(a,b),Itv(a',b') ->
@@ -139,14 +148,29 @@ let rec div i j = match i,j with
       else
         meet (div i (join j (Itv (Int Z.one, Pinf)))) (div i (join j (Itv(Minf, Int Z.minus_one))))
 
-let rec rem i j = match i,j with
+(* if took the same operator than the one in apron *)
+
+(* abs a = |a| *)
+let abs b = match b with
+  | Bot -> Bot
+  | Itv(l,h) ->
+      if bound_sgn l >= 0 then b
+      else if bound_sgn h <= 0 then neg b
+      else Itv(bound_zero, bound_max (bound_abs l) h)
+
+let rec rem b c = match b,c with
   | Bot,_ | _,Bot -> Bot
-  | Itv(a,b), Itv(c,d) ->
-      let m = bound_max c d in
-      if bound_sub a b <= m 
-      then Itv(bound_zero,m)
-      else let b1 = bound_rem a m and b2 = bound_rem b m in
-           Itv(bound_zero,bound_max b1 b2)
+  | Itv(l1,h1), Itv(l2,h2) ->
+      let abs_c = abs c in
+      if bound_sgn (inf abs_c) == 0 then top
+      else let tmp' = mul (div b abs_c) abs_c in (* tmp' = |c|*b/|c| *)
+           let tmp =
+             if bound_sgn (sup b) < 0 then
+               Itv(bound_neg (sup abs_c),bound_zero)
+             else if bound_sgn (inf b) > 0 then
+               Itv(bound_neg (sup abs_c), sup abs_c)
+             else Itv(bound_zero, sup abs_c) in
+           meet (sub b tmp') tmp
 
 let binary i j = function
   | AST_PLUS     -> add i j
