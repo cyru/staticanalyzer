@@ -52,6 +52,8 @@ module type DOMAIN =
         
   end
 
+module Constant = Constant_domain
+module Interval = Interval_domain
 
 module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
 
@@ -229,7 +231,7 @@ type bool_expr =
 
   let join a b = match a,b with
   | Bot,x | x,Bot -> x
-  | Env m, Env n -> Env (Map.map2z (fun _ x y -> V.join x y) m n)
+  | Env m, Env n -> Env (Map.map2o (fun _ x -> x) (fun _ x -> x) (fun _ x y -> V.join x y) m n)
 
   let widen a b = match a,b with
   | Bot,x | x,Bot -> x

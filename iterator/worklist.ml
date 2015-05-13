@@ -1,11 +1,14 @@
 open Domain
 open Cfg
 
-module Iterator (D : DOMAIN) = struct
+module WorklistIter (D : DOMAIN) = struct
   module Map = Mapext.Make
     (struct type t = Cfg.node let compare n1 n2 = compare n1.node_id n2.node_id end)
-  
-  type invs = D.t Map.t
+
+  type t = D.t Map.t
+
+  let print c =
+    Map.iter (fun n inv -> Printf.printf "Node %d\n" n.node_id; D.print c inv)
 
   module Set = Set.Make
     (struct type t = Cfg.node let compare n1 n2 = compare n1.node_id n2.node_id end)

@@ -11,14 +11,16 @@
   You should modify this file to call your functions instead!
 *)
 
+module It = Iterator.Worklist(Domain.NonRelational(Domain.Interval))
 
 (* parse filename *)
 let doit filename =
   let prog = File_parser.parse_file filename in
   let cfg = Tree_to_cfg.prog prog in
   Printf.printf "%a" Cfg_printer.print_cfg cfg;
-  Cfg_printer.output_dot "cfg.dot" cfg
-
+  Cfg_printer.output_dot "cfg.dot" cfg;
+  It.print stdout (It.iterate cfg)
+  
 
 (* parses arguments to get filename *)
 let main () =

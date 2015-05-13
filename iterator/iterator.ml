@@ -1,9 +1,15 @@
 open Domain
+open Cfg
+open Worklist
 
-module Iterator (D : DOMAIN) =
-  module Map = Mapext.Make
-    (struct type = Cfg.node let compare n1 n2 = compare n1.node_id n2.node_id end)
-  
-  type invs = D.t Map
+module type ITERATOR = sig
 
-  let 
+  type t
+
+  val print : out_channel -> t -> unit
+
+  val iterate : Cfg.cfg -> t
+
+end
+
+module Worklist = WorklistIter

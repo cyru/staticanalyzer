@@ -36,9 +36,10 @@ Library "iterator"
   Path: iterator
   BuildDepends: libs, frontend, domains
   Modules:
-    Worklist
+    Worklist,
+    Iterator
 
 Executable statan
   Path:         .
-  BuildDepends: libs, frontend, domains
+  BuildDepends: libs, frontend, domains, iterator
   MainIs:       main.ml
