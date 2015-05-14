@@ -38,6 +38,9 @@ module type DOMAIN =
     (* abstract join *)
     val join: t -> t -> t
 
+    (* abstract meet *)
+    val meet: t -> t -> t
+
     (* widening *)
     val widen: t -> t -> t
 
@@ -118,38 +121,6 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
     | CFG_bool_rand -> e
 
 (*
-type bool_expr =
-
-//  (* unary operation *)
-  | CFG_bool_unary of bool_unary_op * bool_expr
-
-  (* binary operation *)
-  | CFG_bool_binary of bool_binary_op * bool_expr * bool_expr
-  | CFG_compare of compare_op * int_expr * int_expr
-
-  (* constants *)
-  | CFG_bool_const of bool
-
-  (* non-deterministic choice *)
-  | CFG_bool_rand
-
-        | AST_bool_const of bool
-        | AST_bool_rand
-
-      end
-    | AST_bool_binary of bool_binary_op * (bool_expr ext) * (bool_expr ext)
-    | AST_compare of compare_op * (int_expr ext) * (int_expr ext)
-    | AST_bool_const of bool
-    | AST_bool_rand
-
-*)
-(*    |type int_unary_op =
-     | AST_UNARY_PLUS     (* +e *)
-     | AST_UNARY_MINUS    (* -e *)
-
-     type bool_unary_op =
-     | AST_NOT            (* !e logical negation *)
-
 
 (* binary expression operators *)
 
@@ -171,26 +142,6 @@ type bool_expr =
      type bool_binary_op =
      | AST_AND           (* e && e *)
      | AST_OR            (* e || e *)
-
-
-(* expressions *)
-type int_expr = 
-
-  (* unary operation *)
-  | CFG_int_unary of int_unary_op * int_expr
-
-  (* binary operation *)
-  | CFG_int_binary of int_binary_op * int_expr * int_expr
-
-  (* variable use *)
-  | CFG_int_var of var
-
-  (* constants *)
-  | CFG_int_const of Z.t
-
-  (* non-deterministic choice between two integers *)
-  | CFG_int_rand of Z.t (* lower bound *) * Z.t (* upper bound *)
-
         
 type bool_expr =
 
@@ -209,6 +160,16 @@ type bool_expr =
 *)
 
 
+  let meet a b = match a,b with
+  | Bot,x | x,Bot -> Bot
+  | Env m, Env n -> Env (Map.map2o (fun _ x -> x) (fun _ x -> x) (fun _ x y -> V.meet x y) m n)
+
+  let join a b = match a,b with
+  | Bot,x | x,Bot -> x
+  | Env m, Env n -> Env (Map.map2o (fun _ x -> x) (fun _ x -> x) (fun _ x y -> V.join x y) m n)
+
+
+
   type 'a annoted = 'a * V.t
   type int_expr_annoted =
   | ANN_int_unary of int_unary_op * (int_expr_annoted annoted)
@@ -222,16 +183,40 @@ type bool_expr =
   | CFG_int_binary (op, e1, e2) -> let (e1p,abs1) = topdown_expr e1 env in let (e2p, abs2) = topdown_expr e2 env in (ANN_int_binary(op,(e1p, abs1),(e2p, abs2)),V.binary abs1 abs2 op)
   | CFG_int_var(v) -> begin match env with
     |Bot -> (ANN_int_var(v),V.bottom)
-    |Env (ev) -> (ANN_int_var(v),try Map.find v ev with |_ -> V.bottom) (*WHAT TODO ? V.bottom or fail miserably ?*) end
+    |Env (ev) -> (ANN_int_var(v),try Map.find v ev with |_ -> V.bottom) (*WHAT TODO in case of non declared variable ? V.bottom or fail miserably ?*)
+  end
   | CFG_int_const(a) -> (ANN_int_const(a),(V.const a))
   | CFG_int_rand(low, up) -> (ANN_int_rand(low,up),V.rand low up)
 
+  let rec backward_expr (e:int_expr_annoted annoted) (env:t) : (int_expr_annoted annoted * t) = 
+    let (ex, an) = e in 
+    match ex with
+    | ANN_int_unary (op, (e1, a1)) -> let exp2, env2 = backward_expr (e1,V.bwd_unary a1 op an) env in  (ANN_int_unary(op, exp2),an), env2
+    | ANN_int_binary (op, (e1,a1), (e2,a2)) -> let x1,x2 = (V.bwd_binary a1 a2 op an) in 
+                                               let exp1, env1 = backward_expr (e1,x1) env in
+                                               let exp2, env2 = backward_expr (e2,x2) env1 in
+                                               (ANN_int_binary (op, (exp1), (exp2)), an), env2
+    | ANN_int_var(v) -> begin match env with
+      |Bot -> (ANN_int_var(v), V.bottom), Bot
+      |Env (ev) -> let ev2 = try Map.add v (V.meet (Map.find v ev) an) ev with |_ -> ev in (ANN_int_var(v), Map.find v ev), Env(ev2)
+    end
+    | ANN_int_const(a) -> if(V.subset (V.const a) an) then (ANN_int_const(a), an), env else failwith "il y a probablement un bug01, ou alors l'analyse a fail"
+    | ANN_int_rand(low, up) -> if(V.subset (V.rand low up) an) then (ANN_int_rand(low,up), an), env else failwith "il y a probablement un bug02, ou alors l'analyse a fail"
 
-  let guard = failwith "undefined"
+  let rec analyser_exprN (e:bool_expr) (env:t) : t = match e with
+    | CFG_bool_binary (AST_AND, e1, e2) -> meet (analyser_exprN e1 env) (analyser_exprN e2 env)
+    | CFG_bool_binary (AST_OR, e1, e2) -> join (analyser_exprN e1 env) (analyser_exprN e2 env)
+    | CFG_compare(AST_LESS_EQUAL,e1,e2) (*e2 = 0 après normalisation*) -> 
+      let (ee,an) = (topdown_expr e1 env) in 
+      let (ee2, env2) = backward_expr (ee, (let (aa,_ ) = (V.compare an (V.const Z.zero) AST_LESS_EQUAL) in aa)) env in 
+      env2
+    | CFG_bool_const(bb) -> if bb then env else Bot
+    | CFG_bool_rand -> Bot (*NOT SURE of that*)
+    | _ -> failwith "l'expression n'est pas normalisée"
+      
 
-  let join a b = match a,b with
-  | Bot,x | x,Bot -> x
-  | Env m, Env n -> Env (Map.map2o (fun _ x -> x) (fun _ x -> x) (fun _ x y -> V.join x y) m n)
+  let guard (env:t) (e:bool_expr) : t = 
+    analyser_exprN (normaliserExpression e) env
 
   let widen a b = match a,b with
   | Bot,x | x,Bot -> x
