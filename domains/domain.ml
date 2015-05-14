@@ -200,8 +200,8 @@ type bool_expr =
       |Bot -> (ANN_int_var(v), V.bottom), Bot
       |Env (ev) -> let ev2 = try Map.add v (V.meet (Map.find v ev) an) ev with |_ -> ev in (ANN_int_var(v), Map.find v ev), Env(ev2)
     end
-    | ANN_int_const(a) -> if(V.subset (V.const a) an) then (ANN_int_const(a), an), env else failwith "il y a probablement un bug01, ou alors l'analyse a fail"
-    | ANN_int_rand(low, up) -> if(V.subset (V.rand low up) an) then (ANN_int_rand(low,up), an), env else failwith "il y a probablement un bug02, ou alors l'analyse a fail"
+    | ANN_int_const(a) -> if(V.subset (V.const a) an) then (ANN_int_const(a), an), env else (ANN_int_const(a), an), Bot
+    | ANN_int_rand(low, up) -> if(V.subset (V.rand low up) an) then (ANN_int_rand(low,up), an), env else (ANN_int_rand(low,up), an), Bot
 
   let rec analyser_exprN (e:bool_expr) (env:t) : t = match e with
     | CFG_bool_binary (AST_AND, e1, e2) -> meet (analyser_exprN e1 env) (analyser_exprN e2 env)
