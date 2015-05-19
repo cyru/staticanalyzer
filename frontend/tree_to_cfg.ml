@@ -283,8 +283,8 @@ and call (env:env) ((id,x):id ext) (exprs:Abstract_syntax_tree.int_expr ext list
   | var::rest1, (expr,x1)::rest2 ->
       (* translate argument binding to assignment *)
       let env1, before, e1 = int_expr env expr in
-      add_to_vars env1 var,
-      before @ [CFG_assign (var,e1), x1] @ inst
+      let env2 = add_to_vars env1 var in
+      doargs env2 (before @ [CFG_assign (var,e1), x1] @ inst) (rest1, rest2)
   | _ ->
       failwith (Printf.sprintf "wrong number of arguments for function %s at %s" id (string_of_extent x))
   in

@@ -189,8 +189,10 @@ let print_inst ch i =
 
 (* raw dump of the graph *)        
 let print_cfg ch p =
-  let pp_var ch v = Printf.fprintf ch "%s(%i):%s"
-    v.var_name v.var_id (string_of_type v.var_type) in
+  let pp_var ch v =
+    Printf.fprintf ch "%s(%i):%s"
+      v.var_name v.var_id (string_of_type v.var_type)
+  in
   Printf.fprintf ch "List of variables:\n";
   List.iter
     (fun v ->
