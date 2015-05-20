@@ -24,6 +24,7 @@ module WorklistIter (D : DOMAIN) = struct
       | CFG_skip(_)     -> d
       | CFG_assign(v,e) -> D.assign d v e
       | CFG_guard(g)    -> D.guard d g
+      | CFG_assert(g)   -> let a = D.guard d g in begin if(a == D.bottom) then Printf.printf "Assert failed miserably\n" else () ; a end
       | _               -> failwith "undefined" in
     (* Compute widening points by using a depth first search algorithm to find looping points *)
     let widening_points =
