@@ -218,8 +218,6 @@ type bool_expr =
   let guard (env:t) (e:bool_expr) : t = 
     analyser_exprN (normaliserExpression e) env
 
-
-
   let widen a b = match a,b with
   | Bot,x | x,Bot -> x
   | Env m, Env n -> Env (Map.map2z (fun _ x y -> V.widen x y) m n)
