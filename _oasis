@@ -41,6 +41,7 @@ Library "iterator"
   BuildDepends: libs, frontend, domains
   Modules:
     Worklist,
+    Worklistinter,
     Iterator
 
 Executable statan

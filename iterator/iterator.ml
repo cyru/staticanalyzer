@@ -13,3 +13,4 @@ module type ITERATOR = sig
 end
 
 module Worklist = WorklistIter
+module WorklistInter = Worklistinter.WorklistIter
