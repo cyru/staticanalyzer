@@ -1,0 +1,7 @@
+int x = 0;
+
+void main()
+{
+    x = 1;
+    assert(x<=0);
+}
