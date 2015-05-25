@@ -1,5 +1,6 @@
 open Domain
 open Cfg
+open Abstract_syntax_tree
 
 
 module WorklistIter (D : DOMAIN) = struct
