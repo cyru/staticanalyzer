@@ -1,10 +1,20 @@
-Readme project static analysis :
+A 4-page report that describes succinctly the features of your projects, tells which extension(s) you chose to implement, explains your implementation choices, reports on the difficulties you encountered (in particular, if you were not able to implement fully some feature). It should also describe the analysis usage and discuss the analysis results on some of the examples you provide with the analyzer.
 
-        It is supposed that only 1 assert is in the code (for backward analysis)
 
-    Implemented : all three features
+    Readme project static analysis :
+
+
+    Dependecies :
+    - Ocaml 4.02.2
+    - Apron, Zarith
+    - Oasis, Ocamlbuild
+    - Ocamllex, Menhir
+
+    It is supposed that only 1 assert is in the code (for backward analysis)
+
+    Implemented : all three features (because group of two)
 
     -Apron
     -Relationnal
-    -Backward analysis : implemented, but not integrated in the source code.
-
+    -Backward analysis : implemented for value and constant domain only. It automaticaly does the forward analysis to construct the mapping between the nodes and the domains (for assignments), and then does a backward analysis. We had some problems with the assignment, because we needed the results of the forward analysis to do a backward assignment, and followed the instructions of the course with some help to better understand it in TD. Code can be found in worklist.ml and worklistinter.ml for the backward iterators and some other functions in domain.ml (bwd_assign)
+    
