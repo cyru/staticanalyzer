@@ -93,9 +93,6 @@ module Relational : DOMAIN = struct
       | CFG_bool_unary _ -> failwith "impossible" in
     aux e
 
-
-  type 'a annoted = int
-  type int_expr_annoted =int
                            
   let bwd_assign a b c d = failwith "not implemented"
 
