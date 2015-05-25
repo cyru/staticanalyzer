@@ -209,7 +209,7 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
       let (ee2, env2) = backward_expr (ee, (let (aa,_ ) = (V.compare an (V.const Z.zero) AST_LESS_EQUAL) in aa)) env in 
       env2
     | CFG_bool_const(bb) -> if bb then env else Bot
-    | CFG_bool_rand -> Bot (*NOT SURE of that*)
+    | CFG_bool_rand -> env (*NOT SURE of that*)
     | _ -> failwith "l'expression n'est pas normalisée"
       
 
