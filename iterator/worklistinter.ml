@@ -12,42 +12,23 @@ module WorklistIter (D : DOMAIN) = struct
 
   module Set = Set.Make
     (struct type t = Cfg.node let compare n1 n2 = compare n1.node_id n2.node_id end)
-<<<<<<< HEAD
     
   (* transformCfg cfg is a new control flow graph where function calls have been made explicit *)
-=======
-
->>>>>>> 41eb24127ff6a21dc6660a4784f89ddfefd2c964
   let transformCfg cfg =
     let nb_arcs = ref (List.length cfg.cfg_arcs) in
     let arcs = List.fold_left
       (fun arcs f -> List.fold_left
-<<<<<<< HEAD
-                       (fun arcs a ->
-                         incr nb_arcs; 
-                         (* let a' = { arc_id=!nb_arcs; arc_src = f.func_exit;
-                                     arc_dst = a.arc_src; arc_inst = CFG_skip "function return";}
-                         in*) a(*::a'*)::arcs)
-                       arcs 
-                       f.func_calls)
-      cfg.cfg_arcs
-      cfg.cfg_funcs in
-    { cfg with cfg_arcs = arcs }
-=======
         (fun arcs a ->
-	  incr nb_arcs;
-	  let a' = { arc_id = !nb_arcs; arc_src = f.func_exit;
-	             arc_dst = a.arc_src; arc_inst = CFG_skip "function return"; }
-		     in
-	  a::a'::arcs)
-	arcs
-	f.func_calls)
+	        incr nb_arcs;
+	        let a' = { arc_id = !nb_arcs; arc_src = f.func_exit;
+	                   arc_dst = a.arc_src; arc_inst = CFG_skip "function return"; }
+		      in a::a'::arcs)
+	      arcs
+	      f.func_calls)
       cfg.cfg_arcs
-      cfg.cfg_funcs in
-    { cfg with cfg_arcs = arcs }
+      cfg.cfg_funcs
+    in { cfg with cfg_arcs = arcs }
         
->>>>>>> 41eb24127ff6a21dc6660a4784f89ddfefd2c964
-
   (* simple inter procedural analysis *)
   let iterate cfg =
     let q = Queue.create () in
@@ -58,16 +39,12 @@ module WorklistIter (D : DOMAIN) = struct
     let eval d = function
       | CFG_skip(_)     -> d
       | CFG_assign(v,e) -> D.assign d v e
-<<<<<<< HEAD
-      | CFG_guard(g)    -> D.guard d g
-=======
       | CFG_guard(g)    -> D.guard d g      
       | CFG_assert(g)   -> let a = D.guard d g in 
                            begin if(a == D.bottom) 
                              then Printf.printf "Assert failed miserably\n" 
                              else () ; a 
                            end
->>>>>>> 41eb24127ff6a21dc6660a4784f89ddfefd2c964
       | _               -> failwith "undefined" in
     (* Compute widening points by using a depth first search algorithm to find looping points *)
     let widening_points =

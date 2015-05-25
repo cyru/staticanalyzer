@@ -85,80 +85,77 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
     | Bot   -> failwith "undefined"
     | Env m -> Env (Map.add v (eval env e) m)
 
-  let rec normaliserExpression (e:bool_expr) : bool_expr = 
+  let rec normalizeExpression (e:bool_expr) : bool_expr = 
     match (e) with
     | CFG_bool_unary (AST_NOT, f) -> 
       begin 
         match f with
-        | CFG_bool_unary (AST_NOT, g) -> normaliserExpression g
+        | CFG_bool_unary (AST_NOT, g) -> 
+            normalizeExpression g
         
-        | CFG_bool_binary (AST_AND,g,h) -> (CFG_bool_binary 
-             (*!(g && h) -> (!g)||(!h)*)     (AST_OR, (normaliserExpression (CFG_bool_unary(AST_NOT, g))), (normaliserExpression (CFG_bool_unary(AST_NOT, h)))
-                                              )
-                                            )
-        | CFG_bool_binary (AST_OR,g,h) -> (CFG_bool_binary 
-             (*!(g || h) -> (!g)&&(!h)*)     (AST_AND, (normaliserExpression (CFG_bool_unary(AST_NOT, g))), (normaliserExpression (CFG_bool_unary(AST_NOT, h)))
-                                              )
-                                            )
-        | CFG_compare(AST_EQUAL,e1,e2) -> normaliserExpression (CFG_compare(AST_NOT_EQUAL,e1,e2))
-        | CFG_compare(AST_NOT_EQUAL,e1,e2) ->normaliserExpression (CFG_compare(AST_EQUAL,e1,e2))
-        | CFG_compare(AST_LESS,e1,e2) ->normaliserExpression (CFG_compare(AST_GREATER_EQUAL,e1,e2))
-        | CFG_compare(AST_LESS_EQUAL,e1,e2) ->normaliserExpression (CFG_compare(AST_GREATER,e1,e2))
-        | CFG_compare(AST_GREATER,e1,e2) ->normaliserExpression (CFG_compare(AST_LESS_EQUAL,e1,e2))
-        | CFG_compare(AST_GREATER_EQUAL,e1,e2) ->normaliserExpression (CFG_compare(AST_LESS,e1,e2))
-        | CFG_bool_const(b) -> CFG_bool_const(not b)
-        | CFG_bool_rand -> CFG_bool_rand
+        | CFG_bool_binary (AST_AND,g,h) ->  
+             (*!(g && h) -> (!g)||(!h)*)
+            CFG_bool_binary
+              ( AST_OR
+              , normalizeExpression (CFG_bool_unary(AST_NOT, g))
+              , normalizeExpression (CFG_bool_unary(AST_NOT, h)))
+        | CFG_bool_binary (AST_OR,g,h) -> 
+             (*!(g || h) -> (!g)&&(!h)*)     
+            CFG_bool_binary 
+              ( AST_AND
+              , normalizeExpression (CFG_bool_unary(AST_NOT, g))
+              , normalizeExpression (CFG_bool_unary(AST_NOT, h)))
+        | CFG_compare(AST_EQUAL,e1,e2) -> 
+            normalizeExpression (CFG_compare(AST_NOT_EQUAL,e1,e2))
+        | CFG_compare(AST_NOT_EQUAL,e1,e2) ->
+            normalizeExpression (CFG_compare(AST_EQUAL,e1,e2))
+        | CFG_compare(AST_LESS,e1,e2) ->
+            normalizeExpression (CFG_compare(AST_GREATER_EQUAL,e1,e2))
+        | CFG_compare(AST_LESS_EQUAL,e1,e2) ->
+            normalizeExpression (CFG_compare(AST_GREATER,e1,e2))
+        | CFG_compare(AST_GREATER,e1,e2) ->
+            normalizeExpression (CFG_compare(AST_LESS_EQUAL,e1,e2))
+        | CFG_compare(AST_GREATER_EQUAL,e1,e2) ->
+            normalizeExpression (CFG_compare(AST_LESS,e1,e2))
+        | CFG_bool_const(b) -> 
+            CFG_bool_const(not b)
+        | CFG_bool_rand -> 
+            CFG_bool_rand
       end
-    | CFG_compare(AST_EQUAL,e1,e2) -> normaliserExpression (CFG_bool_binary(AST_AND, (CFG_compare(AST_LESS_EQUAL,e1,e2)) , (CFG_compare(AST_LESS_EQUAL,e2,e1))))
-    | CFG_compare(AST_NOT_EQUAL,e1,e2) -> normaliserExpression (CFG_bool_binary(AST_OR, (CFG_compare(AST_LESS_EQUAL,e1,CFG_int_binary(AST_MINUS,e2,CFG_int_const(Z.one)))) , (CFG_compare(AST_LESS_EQUAL,e2,CFG_int_binary(AST_MINUS,e1,CFG_int_const(Z.one))))))
-    | CFG_compare(AST_LESS,e1,e2) -> normaliserExpression (CFG_compare(AST_LESS_EQUAL,e1,CFG_int_binary(AST_MINUS,e2,CFG_int_const(Z.one))))
-    | CFG_compare(AST_LESS_EQUAL,e1,e2) ->(CFG_compare(AST_LESS_EQUAL,CFG_int_binary(AST_MINUS,e1,e2),CFG_int_const(Z.zero)))
-    | CFG_compare(AST_GREATER,e1,e2) -> normaliserExpression (CFG_compare(AST_LESS_EQUAL,e2,CFG_int_binary(AST_MINUS,e1,CFG_int_const(Z.one))))
-    | CFG_compare(AST_GREATER_EQUAL,e1,e2) -> normaliserExpression (CFG_compare(AST_LESS_EQUAL,e2,e1))
+    | CFG_compare(AST_EQUAL,e1,e2) -> 
+        normalizeExpression 
+          (CFG_bool_binary( AST_AND
+                          , (CFG_compare(AST_LESS_EQUAL,e1,e2))
+                          , (CFG_compare(AST_LESS_EQUAL,e2,e1))))
+    | CFG_compare(AST_NOT_EQUAL,e1,e2) -> 
+        normalizeExpression 
+          (CFG_bool_binary
+            ( AST_OR
+            , (CFG_compare( AST_LESS_EQUAL
+                          , e1
+                          , CFG_int_binary(AST_MINUS,e2,CFG_int_const(Z.one))))
+            , (CFG_compare( AST_LESS_EQUAL
+                          , e2
+                          , CFG_int_binary(AST_MINUS,e1,CFG_int_const(Z.one))))))
+    | CFG_compare(AST_LESS,e1,e2) -> 
+        normalizeExpression 
+          (CFG_compare( AST_LESS_EQUAL
+                      , e1
+                      , CFG_int_binary(AST_MINUS,e2,CFG_int_const(Z.one))))
+    | CFG_compare(AST_LESS_EQUAL,e1,e2) ->
+        CFG_compare(AST_LESS_EQUAL,CFG_int_binary(AST_MINUS,e1,e2),CFG_int_const(Z.zero))
+    | CFG_compare(AST_GREATER,e1,e2) -> 
+        normalizeExpression 
+         (CFG_compare( AST_LESS_EQUAL
+                     , e2
+                     , CFG_int_binary(AST_MINUS,e1,CFG_int_const(Z.one))))
+    | CFG_compare(AST_GREATER_EQUAL,e1,e2) -> 
+        normalizeExpression (CFG_compare(AST_LESS_EQUAL,e2,e1))
         
-    | CFG_bool_binary (op, e1, e2) -> CFG_bool_binary (op, normaliserExpression e1, normaliserExpression e2)
+    | CFG_bool_binary (op, e1, e2) -> 
+        CFG_bool_binary (op, normalizeExpression e1, normalizeExpression e2)
     | CFG_bool_const(_) -> e
     | CFG_bool_rand -> e
-
-(*
-
-(* binary expression operators *)
-
-     type int_binary_op =
-     | AST_PLUS          (* e + e *)
-     | AST_MINUS         (* e - e *)
-     | AST_MULTIPLY      (* e * e *)
-     | AST_DIVIDE        (* e / e *)
-     | AST_MODULO        (* e % e *)
-
-     type compare_op =
-     | AST_EQUAL         (* e == e *)
-     | AST_NOT_EQUAL     (* e != e *)
-     | AST_LESS          (* e < e *)
-     | AST_LESS_EQUAL    (* e <= e *)
-     | AST_GREATER       (* e > e *)
-     | AST_GREATER_EQUAL (* e >= e *)
-
-     type bool_binary_op =
-     | AST_AND           (* e && e *)
-     | AST_OR            (* e || e *)
-        
-type bool_expr =
-
-  (* unary operation *)
-  | CFG_bool_unary of bool_unary_op * bool_expr
-
-  (* binary operation *)
-  | CFG_bool_binary of bool_binary_op * bool_expr * bool_expr
-  | CFG_compare of compare_op * int_expr * int_expr
-
-  (* constants *)
-  | CFG_bool_const of bool
-
-  (* non-deterministic choice *)
-  | CFG_bool_rand
-*)
-
 
   let meet a b = match a,b with
   | Bot,x | x,Bot -> Bot
@@ -216,7 +213,7 @@ type bool_expr =
       
 
   let guard (env:t) (e:bool_expr) : t = 
-    analyser_exprN (normaliserExpression e) env
+    analyser_exprN (normalizeExpression e) env
 
   let widen a b = match a,b with
   | Bot,x | x,Bot -> x
