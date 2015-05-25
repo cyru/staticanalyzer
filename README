@@ -1,0 +1,10 @@
+Readme project static analysis :
+
+        It is supposed that only 1 assert is in the code (for backward analysis)
+
+    Implemented : all three features
+
+    -Apron
+    -Relationnal
+    -Backward analysis : implemented, but not integrated in the source code.
+
