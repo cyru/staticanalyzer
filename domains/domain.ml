@@ -22,6 +22,8 @@ module type DOMAIN =
        to integers
      *)
     type t
+    type 'a annoted
+    type int_expr_annoted
 
     (* initial environment, with all variables initialized to 0 *)
     val init: var list -> t
@@ -35,6 +37,9 @@ module type DOMAIN =
     (* filter environments to keep only those satisfying the boolean expression *)
     val guard: t -> bool_expr -> t
 
+    (* backward assign*)
+    val bwd_assign: t->var->int_expr->t->t
+                   
     (* abstract join *)
     val join: t -> t -> t
 
@@ -168,8 +173,6 @@ type bool_expr =
   | Bot,x | x,Bot -> x
   | Env m, Env n -> Env (Map.map2o (fun _ x -> x) (fun _ x -> x) (fun _ x y -> V.join x y) m n)
 
-
-
   type 'a annoted = 'a * V.t
   type int_expr_annoted =
   | ANN_int_unary of int_unary_op * (int_expr_annoted annoted)
@@ -217,6 +220,24 @@ type bool_expr =
 
   let guard (env:t) (e:bool_expr) : t = 
     analyser_exprN (normaliserExpression e) env
+
+  let bwd_assign (x:t) (v:var) (expr:int_expr) (f:t) =
+    let env = Map.add v (Map.find v
+                                  (match x with
+                                   |Bot -> Map.empty
+                                   |Env m -> m
+                                  ))
+                      (match f with
+                       |Bot -> Map.empty
+                       |Env m -> m
+                                       )in
+    let (e1,a1) = topdown_expr expr (Env env) in
+    let (e2,a2) = (e1, V.join a1 (Map.find v 
+                      (match f with
+                       |Bot -> Map.empty
+                       |Env m -> m
+                                       ))) in
+    let (_,s) = backward_expr (e2,a2) (Env env) in s
 
   let widen a b = match a,b with
   | Bot,x | x,Bot -> x

@@ -110,7 +110,7 @@ type inst =
     
   (* assignment *)
   | CFG_assign of var * int_expr
-
+                           
   (* guard: test that must be satisfied to make a transition *)
   | CFG_guard of bool_expr
 
