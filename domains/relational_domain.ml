@@ -93,17 +93,12 @@ module Relational : DOMAIN = struct
       | CFG_bool_unary _ -> failwith "impossible" in
     aux e
 
-<<<<<<< HEAD
 
   type 'a annoted = int
   type int_expr_annoted =int
                            
   let bwd_assign a b c d = failwith "not implemented"
-        
-=======
-  let bwd_assign = failwith "undefined"
 
->>>>>>> 15fe121d2ef2170262519d6b31c82e68ff9f34bf
   let join = Abstract1.join manager
 
   let meet = Abstract1.meet manager
