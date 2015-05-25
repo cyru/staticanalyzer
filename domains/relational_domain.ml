@@ -93,12 +93,14 @@ module Relational : DOMAIN = struct
       | CFG_bool_unary _ -> failwith "impossible" in
     aux e
 
-  let bwd_assign = failwith "undefined"
+                           
+  let bwd_assign a b c d = failwith "not implemented"
 
   let join = Abstract1.join manager
 
   let meet = Abstract1.meet manager
 
+                            
   let widen = Abstract1.widening manager
 
   let subset = Abstract1.is_leq manager

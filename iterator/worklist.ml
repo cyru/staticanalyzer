@@ -72,9 +72,9 @@ module WorklistIter (D : DOMAIN) = struct
     let invs = List.fold_left (fun env n -> Map.add n D.bottom env) Map.empty cfg.cfg_nodes in
     (* d' = eval d i is the domain obtained from the evaluation of instruction i in domain
      * d *)
-    let eval d inst= match inst with
+    let eval d inst src = match inst with
       | CFG_skip(_)     -> d
-      | CFG_assign(v,e) -> D.bwd_assign (*FIXEME HERE WE HAVE TO PUT THE ENVIRONEMENT OBTAINED BY FORWARD ANALYSIS X*)d v e d
+      | CFG_assign(v,e) -> D.bwd_assign (Map.find src mapping) v e d
       | CFG_guard(g)    -> D.guard d g
       | CFG_assert(g)   -> let b = D.guard d (g) in
                            let a = D.guard d (CFG_bool_unary(AST_NOT, g)) in 
@@ -104,7 +104,7 @@ module WorklistIter (D : DOMAIN) = struct
         let n = Queue.pop q in let x_i = Map.find n invs in
         let y' = 
           List.fold_left 
-            (fun d a -> D.join d (eval (Map.find a.arc_src invs) a.arc_inst)) 
+            (fun d a -> D.join d (eval (Map.find a.arc_src invs) a.arc_inst a.arc_src)) 
             D.bottom 
             n.node_in in
         let y = if Set.mem n widening_points then D.widen x_i y' else y' in
