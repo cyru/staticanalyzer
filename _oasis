@@ -1,6 +1,6 @@
 OASISFormat: 0.4
 BuildTools:  ocamlbuild
-BuildDepends: zarith
+BuildDepends: zarith, apron
 Name:        StaticAnalyzer
 Version:     0.1
 Synopsis:    Static analysis project at the ENS.
