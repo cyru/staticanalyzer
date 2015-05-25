@@ -85,13 +85,42 @@ module Relational : DOMAIN = struct
 
   let guard m e =
     let e' = remove_not e in
+    let env = Abstract1.env m in
     let rec aux = function
       | CFG_bool_binary (o,e1,e2) ->
           let a1 = aux e1 and a2 = aux e2 in
           (match o with AST_AND -> Abstract1.meet | _ -> Abstract1.join) manager a1 a2
-      | CFG_bool_const true -> m
+      | CFG_compare (o,e1,e2) ->
+          let e1' = expr_to_texpr e1 and e2' = expr_to_texpr e2 in
+          let ar = match o with
+          | AST_EQUAL ->
+              let c = Tcons1.make (Texpr1.of_expr env (Texpr1.Binop(Texpr1.Sub, e1', e2', Texpr1.Int, Texpr1.Down))) Tcons1.EQ in
+              let ar = Tcons1.array_make env 1 in Tcons1.array_set ar 0 c; ar
+          | AST_NOT_EQUAL ->
+              let c1 = Tcons1.make (Texpr1.of_expr env (Texpr1.Binop(Texpr1.Sub, e1', e2', Texpr1.Int, Texpr1.Down))) Tcons1.SUP in
+              let c2 = Tcons1.make (Texpr1.of_expr env (Texpr1.Binop(Texpr1.Sub, e2', e1', Texpr1.Int, Texpr1.Down))) Tcons1.SUP in
+              let ar = Tcons1.array_make env 2 in
+              Tcons1.array_set ar 0 c1; Tcons1.array_set ar 1 c2; ar 
+          | AST_LESS ->
+              let c = Tcons1.make (Texpr1.of_expr env (Texpr1.Binop(Texpr1.Sub, e2', e1', Texpr1.Int, Texpr1.Down))) Tcons1.SUP in
+              let ar = Tcons1.array_make env 1 in
+              Tcons1.array_set ar 0 c; ar
+          | AST_LESS_EQUAL ->
+              let c = Tcons1.make (Texpr1.of_expr env (Texpr1.Binop(Texpr1.Sub, e2', e1', Texpr1.Int, Texpr1.Down))) Tcons1.SUPEQ in
+              let ar = Tcons1.array_make env 1 in
+              Tcons1.array_set ar 0 c; ar
+          | AST_GREATER ->
+              let c = Tcons1.make (Texpr1.of_expr env (Texpr1.Binop(Texpr1.Sub, e1', e2', Texpr1.Int, Texpr1.Down))) Tcons1.SUP in
+              let ar = Tcons1.array_make env 1 in
+              Tcons1.array_set ar 0 c; ar
+          | AST_GREATER_EQUAL ->
+              let c = Tcons1.make (Texpr1.of_expr env (Texpr1.Binop(Texpr1.Sub, e1', e2', Texpr1.Int, Texpr1.Down))) Tcons1.SUPEQ in
+              let ar = Tcons1.array_make env 1 in
+              Tcons1.array_set ar 0 c; ar
+          in Abstract1.meet_tcons_array manager m ar
+      | CFG_bool_const b -> if b then m else Abstract1.bottom manager (Abstract1.env m)
       | CFG_bool_unary _ -> failwith "impossible" in
-    aux e
+    aux e'
 
                            
   let bwd_assign a b c d = failwith "not implemented"
