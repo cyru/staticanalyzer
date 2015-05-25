@@ -15,7 +15,7 @@ Library "libs"
 Library "frontend"
   Path:         frontend
   CompiledObject: native
-  BuildDepends: libs
+  BuildDepends: libs, zarith
   Modules: 
     Abstract_syntax_tree,
     Cfg,
@@ -32,6 +32,7 @@ Library "domains"
   Modules:
     Constant_domain,
     Interval_domain,
+    Relational_domain,
     Value_domain,
     Domain
 

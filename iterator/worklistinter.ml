@@ -12,24 +12,23 @@ module WorklistIter (D : DOMAIN) = struct
 
   module Set = Set.Make
     (struct type t = Cfg.node let compare n1 n2 = compare n1.node_id n2.node_id end)
-
+    
+  (* transformCfg cfg is a new control flow graph where function calls have been made explicit *)
   let transformCfg cfg =
     let nb_arcs = ref (List.length cfg.cfg_arcs) in
     let arcs = List.fold_left
       (fun arcs f -> List.fold_left
         (fun arcs a ->
-	  incr nb_arcs;
-	  let a' = { arc_id = !nb_arcs; arc_src = f.func_exit;
-	             arc_dst = a.arc_src; arc_inst = CFG_skip "function return"; }
-		     in
-	  a::a'::arcs)
-	arcs
-	f.func_calls)
+	        incr nb_arcs;
+	        let a' = { arc_id = !nb_arcs; arc_src = f.func_exit;
+	                   arc_dst = a.arc_src; arc_inst = CFG_skip "function return"; }
+		      in a::a'::arcs)
+	      arcs
+	      f.func_calls)
       cfg.cfg_arcs
-      cfg.cfg_funcs in
-    { cfg with cfg_arcs = arcs }
+      cfg.cfg_funcs
+    in { cfg with cfg_arcs = arcs }
         
-
   (* simple inter procedural analysis *)
   let iterate cfg =
     let q = Queue.create () in
