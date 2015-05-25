@@ -93,6 +93,8 @@ module Relational : DOMAIN = struct
       | CFG_bool_unary _ -> failwith "impossible" in
     aux e
 
+  let bwd_assign = failwith "undefined"
+
   let join = Abstract1.join manager
 
   let meet = Abstract1.meet manager

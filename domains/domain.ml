@@ -22,8 +22,6 @@ module type DOMAIN =
        to integers
      *)
     type t
-    type 'a annoted
-    type int_expr_annoted
 
     (* initial environment, with all variables initialized to 0 *)
     val init: var list -> t
