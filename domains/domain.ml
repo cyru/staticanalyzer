@@ -85,7 +85,7 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
     | CFG_int_rand (l,h) -> V.rand l h
   
   let assign env v e = match env with
-    | Bot   -> failwith "undefined"
+    | Bot   -> Env (Map.singleton v (eval env e))
     | Env m -> Env (Map.add v (eval env e) m)
 
   let rec normalizeExpression (e:bool_expr) : bool_expr = 
