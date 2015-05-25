@@ -9,10 +9,12 @@ License:     FreeBSD
 
 Library "libs"
   Path:    libs
+  CompiledObject: native
   Modules: Mapext
 
 Library "frontend"
   Path:         frontend
+  CompiledObject: native
   BuildDepends: libs
   Modules: 
     Abstract_syntax_tree,
@@ -25,6 +27,7 @@ Library "frontend"
 
 Library "domains"
   Path:         domains
+  CompiledObject: native
   BuildDepends: libs, frontend
   Modules:
     Constant_domain,
@@ -34,12 +37,15 @@ Library "domains"
 
 Library "iterator"
   Path: iterator
+  CompiledObject: native
   BuildDepends: libs, frontend, domains
   Modules:
     Worklist,
+    Worklistinter,
     Iterator
 
 Executable statan
   Path:         .
+  CompiledObject: native
   BuildDepends: libs, frontend, domains, iterator
   MainIs:       main.ml
