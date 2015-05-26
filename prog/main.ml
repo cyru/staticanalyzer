@@ -13,7 +13,7 @@
 open Apron
 
 (*module It = Iterator.Worklist(Domain.NonRelational(Domain.Interval)) *)
-module It = Iterator.WorklistInter(Domain.NonRelational(Domain.Interval))
+module It = Iterator.WorklistInter(Domain.Relational)
 
 (* parse filename *)
 let doit filename =

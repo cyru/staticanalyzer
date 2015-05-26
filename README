@@ -1,20 +1,28 @@
-A 4-page report that describes succinctly the features of your projects, tells which extension(s) you chose to implement, explains your implementation choices, reports on the difficulties you encountered (in particular, if you were not able to implement fully some feature). It should also describe the analysis usage and discuss the analysis results on some of the examples you provide with the analyzer.
+A 4-page report that describes succinctly the features of your projects, tells
+which extension(s) you chose to implement, explains your implementation choices,
+reports on the difficulties you encountered (in particular, if you were not 
+able to implement fully some feature). It should also describe the analysis usage and discuss the analysis results on some of the examples you provide with the analyzer.
 
+Dependecies :
+- Ocaml 4.02.2
+- Apron, Zarith
+- Oasis, Ocamlbuild
+- Ocamllex, Menhir
 
-    Readme project static analysis :
+It is supposed that only 1 assert is in the code (for backward analysis)
 
+Implemented : all three features (because group of two)
 
-    Dependecies :
-    - Ocaml 4.02.2
-    - Apron, Zarith
-    - Oasis, Ocamlbuild
-    - Ocamllex, Menhir
-
-    It is supposed that only 1 assert is in the code (for backward analysis)
-
-    Implemented : all three features (because group of two)
-
-    -Apron
-    -Relationnal
-    -Backward analysis : implemented for value and constant domain only. It automaticaly does the forward analysis to construct the mapping between the nodes and the domains (for assignments), and then does a backward analysis. We had some problems with the assignment, because we needed the results of the forward analysis to do a backward assignment, and followed the instructions of the course with some help to better understand it in TD. Code can be found in worklist.ml and worklistinter.ml for the backward iterators and some other functions in domain.ml (bwd_assign)
+-Apron
+-Relationnal
+-Backward analysis : implemented for value and constant domain only. It automaticaly does the forward analysis to construct the mapping between the nodes and the domains (for assignments), and then does a backward analysis. We had some problems with the assignment, because we needed the results of the forward analysis to do a backward assignment, and followed the instructions of the course with some help to better understand it in TD. Code can be found in worklist.ml and worklistinter.ml for the backward iterators and some other functions in domain.ml (bwd_assign)
     
+
+Difficulties met:
+- installing Apron was a big deal: in the beginning we wanted to use oasis
+  but we couldn't make it work, so we had to use a Makefile, but we had
+  still problems of dynamically loaded library while running the problem
+  so we had to make a shell script the executable where we specified the
+  directory where the libraries where
+- Making the interprocedural analysis work required quite a few bug fixes
+  because we didn't really read the way the Graph was created.
