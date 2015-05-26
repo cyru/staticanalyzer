@@ -13,6 +13,7 @@
 open Abstract_syntax_tree
 open Cfg
 open Value_domain
+open Apron
   
 module type DOMAIN =
   sig
@@ -36,7 +37,7 @@ module type DOMAIN =
     val guard: t -> bool_expr -> t
 
     (* backward assign*)
-    val bwd_assign: t->var->int_expr->t->t
+    val bwd_assign: t -> var -> int_expr -> t -> t
                    
     (* abstract join *)
     val join: t -> t -> t
@@ -80,7 +81,7 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
     | CFG_int_var v -> 
         begin match env with 
         | Bot -> failwith "undefined" 
-        | Env m -> Map.find v m end
+        | Env m -> try Map.find v m with Not_found -> Printf.printf "%s\n" v.var_name; failwith "var" end
     | CFG_int_const z    -> V.const z
     | CFG_int_rand (l,h) -> V.rand l h
   
@@ -176,41 +177,64 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
   | ANN_int_const of Z.t
   | ANN_int_rand of (Z.t (* lower bound *) * Z.t (* upper bound *))
 
-  let rec topdown_expr (e:int_expr) (env:t) : int_expr_annoted annoted = match e with
-  | CFG_int_unary (op, e1) -> let (e1p, abs) = topdown_expr e1 env in (ANN_int_unary(op, (e1p,abs)) ,V.unary abs op)
-  | CFG_int_binary (op, e1, e2) -> let (e1p,abs1) = topdown_expr e1 env in let (e2p, abs2) = topdown_expr e2 env in (ANN_int_binary(op,(e1p, abs1),(e2p, abs2)),V.binary abs1 abs2 op)
-  | CFG_int_var(v) -> begin match env with
-    |Bot -> (ANN_int_var(v),V.bottom)
-    |Env (ev) -> (ANN_int_var(v),try Map.find v ev with |_ -> V.bottom) (*WHAT TODO in case of non declared variable ? V.bottom or fail miserably ?*)
-  end
-  | CFG_int_const(a) -> (ANN_int_const(a),(V.const a))
-  | CFG_int_rand(low, up) -> (ANN_int_rand(low,up),V.rand low up)
+  let rec topdown_expr (e:int_expr) (env:t) : int_expr_annoted annoted = 
+    match e with
+    | CFG_int_unary (op, e1) -> 
+        let (e1p, abs) = topdown_expr e1 env in
+        ANN_int_unary(op, (e1p,abs)) ,V.unary abs op
+    | CFG_int_binary (op, e1, e2) -> 
+        let (e1p,abs1) = topdown_expr e1 env 
+        and (e2p, abs2) = topdown_expr e2 env in 
+        ANN_int_binary(op,(e1p, abs1),(e2p, abs2)),V.binary abs1 abs2 op
+    | CFG_int_var(v) -> 
+        begin match env with
+        |Bot -> ANN_int_var(v),V.bottom
+        |Env (ev) -> 
+            ANN_int_var(v),(try Map.find v ev with |_ -> failwith "undefined")
+        end
+    | CFG_int_const(a) -> ANN_int_const a, V.const a
+    | CFG_int_rand(low, up) -> ANN_int_rand(low,up),V.rand low up
 
-  let rec backward_expr (e:int_expr_annoted annoted) (env:t) : (int_expr_annoted annoted * t) = 
+  let rec backward_expr e env = 
     let (ex, an) = e in 
     match ex with
-    | ANN_int_unary (op, (e1, a1)) -> let exp2, env2 = backward_expr (e1,V.bwd_unary a1 op an) env in  (ANN_int_unary(op, exp2),an), env2
-    | ANN_int_binary (op, (e1,a1), (e2,a2)) -> let x1,x2 = (V.bwd_binary a1 a2 op an) in 
-                                               let exp1, env1 = backward_expr (e1,x1) env in
-                                               let exp2, env2 = backward_expr (e2,x2) env1 in
-                                               (ANN_int_binary (op, (exp1), (exp2)), an), env2
-    | ANN_int_var(v) -> begin match env with
-      |Bot -> (ANN_int_var(v), V.bottom), Bot
-      |Env (ev) -> let ev2 = try Map.add v (V.meet (Map.find v ev) an) ev with |_ -> ev in (ANN_int_var(v), Map.find v ev), Env(ev2)
-    end
-    | ANN_int_const(a) -> if(V.subset (V.const a) an) then (ANN_int_const(a), an), env else (ANN_int_const(a), an), Bot
-    | ANN_int_rand(low, up) -> if(V.subset (V.rand low up) an) then (ANN_int_rand(low,up), an), env else (ANN_int_rand(low,up), an), Bot
+    | ANN_int_unary (op, (e1, a1)) -> 
+        let exp2, env2 = backward_expr (e1,V.bwd_unary a1 op an) env in  
+        (ANN_int_unary(op, exp2),an), env2
+    | ANN_int_binary (op, (e1,a1), (e2,a2)) -> 
+        let x1,x2 = (V.bwd_binary a1 a2 op an) in 
+        let exp1, env1 = backward_expr (e1,x1) env in
+        let exp2, env2 = backward_expr (e2,x2) env1 in
+        (ANN_int_binary (op, (exp1), (exp2)), an), env2
+    | ANN_int_var(v) ->
+        begin match env with
+        |Bot -> (ANN_int_var(v), V.bottom), Bot
+        |Env (ev) -> 
+            let ev2 = try Map.add v (V.meet (Map.find v ev) an) ev 
+            with _ -> ev in 
+            (ANN_int_var(v), Map.find v ev), Env ev2
+        end
+    | ANN_int_const(a) -> 
+        if V.subset (V.const a) an 
+        then (ANN_int_const(a), an), env 
+        else (ANN_int_const(a), an), Bot
+    | ANN_int_rand(low, up) -> 
+        if V.subset (V.rand low up) an 
+        then (ANN_int_rand(low,up), an), env 
+        else (ANN_int_rand(low,up), an), Bot
 
   let rec analyser_exprN (e:bool_expr) (env:t) : t = match e with
-    | CFG_bool_binary (AST_AND, e1, e2) -> meet (analyser_exprN e1 env) (analyser_exprN e2 env)
-    | CFG_bool_binary (AST_OR, e1, e2) -> join (analyser_exprN e1 env) (analyser_exprN e2 env)
+    | CFG_bool_binary (AST_AND, e1, e2) -> 
+        meet (analyser_exprN e1 env) (analyser_exprN e2 env)
+    | CFG_bool_binary (AST_OR, e1, e2) -> 
+        join (analyser_exprN e1 env) (analyser_exprN e2 env)
     | CFG_compare(AST_LESS_EQUAL,e1,e2) (*e2 = 0 après normalisation*) -> 
       let (ee,an) = (topdown_expr e1 env) in 
-      let (ee2, env2) = backward_expr (ee, (let (aa,_ ) = (V.compare an (V.const Z.zero) AST_LESS_EQUAL) in aa)) env in 
+      let (ee2, env2) = backward_expr (ee, fst (V.compare an (V.const Z.zero) AST_LESS_EQUAL)) env in 
       env2
     | CFG_bool_const(bb) -> if bb then env else Bot
     | CFG_bool_rand -> env (*NOT SURE of that*)
-    | _ -> failwith "l'expression n'est pas normalisée"
+    | _ -> failwith "impossibl"
       
 
   let guard (env:t) (e:bool_expr) : t = 
@@ -241,16 +265,18 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
   let subset a b = match a,b with
   | Bot,Bot       -> true
   | Bot,_ | _,Bot -> false
-  | Env m, Env n  -> Map.for_all2z (fun _ x y -> V.subset x y) m n
+  | Env m, Env n  -> Map.for_all2o (fun _ _ -> false) (fun _ _ -> true) (fun _ x y -> V.subset x y) m n
   
   let is_bottom = function
   | Bot -> true
   | Env e -> Map.is_empty e
 
   let print ch = function
-  | Bot   -> Printf.fprintf ch "Bot"
+  | Bot   -> Printf.fprintf ch "Bot\n"
   | Env m -> 
       Printf.fprintf ch "Environment:\n";
       Map.iter (fun v i -> Cfg_printer.print_var ch v; Printf.fprintf ch " ";
                            V.print ch i; Printf.fprintf ch "\n") m;
 end
+
+module Relational : DOMAIN = Relational_domain

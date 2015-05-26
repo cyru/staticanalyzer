@@ -10,6 +10,8 @@ module type ITERATOR = sig
 
   val iterate : Cfg.cfg -> t
 
+  val transformCfg : Cfg.cfg -> Cfg.cfg
+
 end
 
 module Worklist = WorklistIter

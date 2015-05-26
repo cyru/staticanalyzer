@@ -15,20 +15,21 @@ module WorklistIter (D : DOMAIN) = struct
   module Set = Set.Make
     (struct type t = Cfg.node let compare n1 n2 = compare n1.node_id n2.node_id end)
 
+  let transformCfg = fun x -> x
   (* simple inter procedural analysis *)
   let iterate cfg =
     let q = Queue.create () in
     List.iter (fun n -> Queue.push n q) cfg.cfg_nodes;
-    let invs = List.fold_left (fun env n -> Map.add n D.bottom env) Map.empty cfg.cfg_nodes in
+    let invs = List.fold_left (fun env n -> Map.add n (D.init cfg.cfg_vars) env) Map.empty cfg.cfg_nodes in
     (* d' = eval d i is the domain obtained from the evaluation of instruction i in domain
      * d *)
-    let eval d = function
-      | CFG_skip(_)     -> d
-      | CFG_assign(v,e) -> D.assign d v e
+    let eval d =  function
+      | CFG_skip(_)     -> (*Printf.printf "skip\n";*) d
+      | CFG_assign(v,e) -> (*Printf.printf "assign\n";*) D.assign d v e
       | CFG_guard(g)    -> D.guard d g
       | CFG_assert(g)   -> let a = D.guard d g in 
                            begin if(a == D.bottom) 
-                             then Printf.printf "Assert failed miserably\n" 
+                             then Printf.printf "Assert failed\n" 
                              else () ; a end
       | _               -> failwith "undefined" in
     (* Compute widening points by using a depth first search algorithm to find looping points *)
@@ -52,10 +53,14 @@ module WorklistIter (D : DOMAIN) = struct
       else
         let n = Queue.pop q in let x_i = Map.find n invs in
         let y' = 
-          List.fold_left 
-            (fun d a -> D.join d (eval (Map.find a.arc_src invs) a.arc_inst)) 
-            D.bottom 
-            n.node_in in
+          if List.length n.node_in == 0 
+          then x_i
+          else 
+            List.fold_left 
+              (fun d a -> D.join d (eval (Map.find a.arc_src invs) a.arc_inst)) 
+              D.bottom
+              n.node_in in
+        (*D.print stdout y';*)
         let y = if Set.mem n widening_points then D.widen x_i y' else y' in
         if D.subset y x_i then
           iter invs
@@ -69,7 +74,7 @@ module WorklistIter (D : DOMAIN) = struct
     let mapping = iterate cfg in
     let q = Queue.create () in
     List.iter (fun n -> Queue.push n q) cfg.cfg_nodes;
-    let invs = List.fold_left (fun env n -> Map.add n D.bottom env) Map.empty cfg.cfg_nodes in
+    let invs = List.fold_left (fun env n -> Map.add n (D.init cfg.cfg_vars) env) Map.empty cfg.cfg_nodes in
     (* d' = eval d i is the domain obtained from the evaluation of instruction i in domain
      * d *)
     let eval d inst src = match inst with
@@ -78,8 +83,8 @@ module WorklistIter (D : DOMAIN) = struct
       | CFG_guard(g)    -> D.guard d g
       | CFG_assert(g)   -> let b = D.guard d (g) in
                            let a = D.guard d (CFG_bool_unary(AST_NOT, g)) in 
-                           begin if(a != D.bottom) 
-                             then Printf.printf "Assert failed miserably\n" 
+                           begin if a != D.bottom 
+                             then Printf.printf "Assert failed\n" 
                              else () ; b end
       | _               -> failwith "undefined" in
     (* Compute widening points by using a depth first search algorithm to find looping points *)
@@ -105,7 +110,7 @@ module WorklistIter (D : DOMAIN) = struct
         let y' = 
           List.fold_left 
             (fun d a -> D.join d (eval (Map.find a.arc_src invs) a.arc_inst a.arc_src)) 
-            D.bottom 
+            (D.init cfg.cfg_vars) 
             n.node_in in
         let y = if Set.mem n widening_points then D.widen x_i y' else y' in
         if D.subset y x_i then

@@ -10,22 +10,25 @@
 
   You should modify this file to call your functions instead!
 *)
+open Apron
 
-module It = Iterator.Worklist(Domain.NonRelational(Domain.Interval))
+(*module It = Iterator.Worklist(Domain.NonRelational(Domain.Interval)) *)
+module It = Iterator.WorklistInter(Domain.NonRelational(Domain.Interval))
 
 (* parse filename *)
 let doit filename =
   let prog = File_parser.parse_file filename in
   let cfg = Tree_to_cfg.prog prog in
-  Printf.printf "%a" Cfg_printer.print_cfg cfg;
+  Printf.printf "%a" Cfg_printer.print_cfg (It.transformCfg cfg);
   Cfg_printer.output_dot "cfg.dot" cfg;
   It.print stdout (It.iterate cfg)
   
 
 (* parses arguments to get filename *)
 let main () =
-  match Array.to_list Sys.argv with
+  try match Array.to_list Sys.argv with
   | _::filename::_ -> doit filename
   | _ -> invalid_arg "no source file specified"
+  with Manager.Error(e) -> Printf.printf "%s\n" e.Manager.msg
 
 let _ = main ()
