@@ -1,4 +1,8 @@
 void main()
     {
-    assert(brand);
+    if(brand)
+    {
+        assert(false);
+    }
+    
     }
