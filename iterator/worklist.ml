@@ -5,24 +5,33 @@ open Abstract_syntax_tree
 
 module WorklistIter (D : DOMAIN) = struct
   module Map = Mapext.Make
-    (struct type t = Cfg.node let compare n1 n2 = compare n1.node_id n2.node_id end)
+                 (struct type t = Cfg.node
+                         let compare n1 n2 = compare n1.node_id n2.node_id end)
 
   type t = D.t Map.t
 
   let print fmt =
-    Map.iter (fun n inv -> Format.fprintf fmt "Node %d\n" n.node_id; D.print fmt inv; Format.fprintf fmt "\n")
+    Map.iter (fun n inv ->
+              Format.fprintf fmt "Node %d\n" n.node_id;
+              D.print fmt inv;
+              Format.fprintf fmt "\n")
 
   module Set = Set.Make
-    (struct type t = Cfg.node let compare n1 n2 = compare n1.node_id n2.node_id end)
+                 (struct type t = Cfg.node
+                         let compare n1 n2 = compare n1.node_id n2.node_id end)
 
   let transformCfg = fun x -> x
   (* simple inter procedural analysis *)
   let iterate cfg =
     let q = Queue.create () in
     List.iter (fun n -> Queue.push n q) cfg.cfg_nodes;
-    let invs = List.fold_left (fun env n -> Map.add n (D.init cfg.cfg_vars) env) Map.empty cfg.cfg_nodes in
-    (* d' = eval d i is the domain obtained from the evaluation of instruction i in domain
-     * d *)
+    let invs = List.fold_left (fun env n ->
+                               Map.add n (D.init cfg.cfg_vars) env)
+                              Map.empty
+                              cfg.cfg_nodes
+    in
+    (* d' = eval d i is the domain obtained from the evaluation of 
+    instruction i in domain d *)
     let eval d =  function
       | CFG_skip(_)     -> (*Printf.printf "skip\n";*) d
       | CFG_assign(v,e) -> (*Printf.printf "assign\n";*) D.assign d v e
@@ -32,7 +41,8 @@ module WorklistIter (D : DOMAIN) = struct
                              then Printf.printf "Assert failed\n" 
                              else () ; a end
       | _               -> failwith "undefined" in
-    (* Compute widening points by using a depth first search algorithm to find looping points *)
+    (* Compute widening points by using a depth first search algorithm 
+    to find looping points *)
     let widening_points =
       let to_visit = Queue.create () in
       Queue.push cfg.cfg_init_entry to_visit;
@@ -74,9 +84,13 @@ module WorklistIter (D : DOMAIN) = struct
     let mapping = iterate cfg in
     let q = Queue.create () in
     List.iter (fun n -> Queue.push n q) cfg.cfg_nodes;
-    let invs = List.fold_left (fun env n -> Map.add n (D.init cfg.cfg_vars) env) Map.empty cfg.cfg_nodes in
-    (* d' = eval d i is the domain obtained from the evaluation of instruction i in domain
-     * d *)
+    let invs = List.fold_left (fun env n ->
+                               Map.add n (D.init cfg.cfg_vars) env)
+                              Map.empty
+                              cfg.cfg_nodes
+    in
+    (* d' = eval d i is the domain obtained from the evaluation of 
+     instruction i in domain d *)
     let eval d inst src = match inst with
       | CFG_skip(_)     -> d
       | CFG_assign(v,e) -> D.bwd_assign (Map.find src mapping) v e d
@@ -87,7 +101,8 @@ module WorklistIter (D : DOMAIN) = struct
                              then Printf.printf "Assert failed\n" 
                              else () ; b end
       | _               -> failwith "undefined" in
-    (* Compute widening points by using a depth first search algorithm to find looping points *)
+    (* Compute widening points by using a depth first search 
+    algorithm to find looping points *)
     let widening_points =
       let to_visit = Queue.create () in
       Queue.push cfg.cfg_init_entry to_visit;
@@ -109,7 +124,9 @@ module WorklistIter (D : DOMAIN) = struct
         let n = Queue.pop q in let x_i = Map.find n invs in
         let y' = 
           List.fold_left 
-            (fun d a -> D.join d (eval (Map.find a.arc_src invs) a.arc_inst a.arc_src)) 
+            (fun d a ->
+             D.join d (eval (Map.find a.arc_src invs) a.arc_inst a.arc_src)
+            ) 
             (D.init cfg.cfg_vars) 
             n.node_in in
         let y = if Set.mem n widening_points then D.widen x_i y' else y' in
