@@ -8,8 +8,8 @@ module WorklistIter (D : DOMAIN) = struct
 
   type t = D.t Map.t
 
-  let print c =
-    Map.iter (fun n inv -> Printf.fprintf c "Node %d\n" n.node_id; D.print c inv; Printf.fprintf c "\n")
+  let print fmt =
+    Map.iter (fun n inv -> Format.fprintf fmt "Node %d\n" n.node_id; D.print fmt inv; Format.fprintf fmt "\n")
 
   module Set = Set.Make
     (struct type t = Cfg.node let compare n1 n2 = compare n1.node_id n2.node_id end)
@@ -70,12 +70,15 @@ module WorklistIter (D : DOMAIN) = struct
     let cfg = transformCfg cfg' in
     let q = Queue.create () in
     List.iter (fun n -> Queue.push n q) cfg.cfg_nodes;
+    D.print Format.std_formatter (D.init cfg.cfg_vars);
+    Format.fprintf Format.std_formatter "\n";
+    (*D.print Format.std_formatter (D.bottom);*)
     let invs = List.fold_left (fun env n -> Map.add n (D.init cfg.cfg_vars) env) Map.empty cfg.cfg_nodes in
     (* d' = eval d i is the domain obtained from the evaluation of instruction i in domain
      * d *)
     let eval d =  function
-      | CFG_skip(s)     -> Printf.printf "%s\n" s; d
-      | CFG_assign(v,e) -> Printf.printf "assign %s\n" v.var_name; D.assign d v e
+      | CFG_skip(s)     -> (*Printf.printf "%s\n" s;*) d
+      | CFG_assign(v,e) -> (*Printf.printf "assign %s\n" v.var_name;*) D.assign d v e
       | CFG_guard(g)    -> D.guard d g
       | CFG_assert(g)   -> let a = D.guard d g in 
                            begin if(a == D.bottom) 
@@ -86,7 +89,7 @@ module WorklistIter (D : DOMAIN) = struct
     let widening_points =
       let to_visit = Queue.create () in
       Queue.push cfg.cfg_init_entry to_visit;
-      Printf.printf "%d\n" cfg.cfg_init_entry.node_id;
+      (*Printf.printf "%d\n" cfg.cfg_init_entry.node_id;*)
       let rec visit visited rep =
         if Queue.is_empty to_visit then rep
         else begin 
@@ -103,19 +106,19 @@ module WorklistIter (D : DOMAIN) = struct
       if Queue.is_empty q then invs
       else
         let n = Queue.pop q in let x_i = Map.find n invs in
-        Printf.printf "%d\n" n.node_id;
+        (*Printf.printf "%d\n" n.node_id;*)
+        (*D.print stdout x_i;*)
         let y' = 
           if List.length n.node_in == 0 
           then x_i
           else 
             List.fold_left 
-              (fun d a -> Printf.printf "%d\n" a.arc_src.node_id; D.join d (eval (Map.find a.arc_src invs) a.arc_inst)) 
+              (fun d a -> (*Printf.printf "%d\n" a.arc_src.node_id;*) D.join d (eval (Map.find a.arc_src invs) a.arc_inst)) 
               D.bottom
               n.node_in in
-        (*D.print stdout y';*)
         let y = if Set.mem n widening_points then D.widen x_i y' else y' in
         if D.subset y x_i then
-          (Printf.printf "next\n"; iter invs)
+          ((*Printf.printf "next\n";*) iter invs)
         else begin
           List.iter (fun a -> Queue.push a.arc_dst q) n.node_out;
           iter (Map.add n y invs)

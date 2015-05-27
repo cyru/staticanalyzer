@@ -19,9 +19,9 @@ module It = Iterator.WorklistInter(Domain.Relational)
 let doit filename =
   let prog = File_parser.parse_file filename in
   let cfg = Tree_to_cfg.prog prog in
-  Printf.printf "%a" Cfg_printer.print_cfg (It.transformCfg cfg);
+  Format.printf "%a" Cfg_printer.print_cfg (It.transformCfg cfg);
   Cfg_printer.output_dot "cfg.dot" cfg;
-  It.print stdout (It.iterate cfg)
+  It.print Format.std_formatter (It.iterate cfg)
   
 
 (* parses arguments to get filename *)

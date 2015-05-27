@@ -55,7 +55,7 @@ module type DOMAIN =
     val is_bottom: t -> bool
         
     (* prints *)
-    val print: out_channel -> t -> unit
+    val print: Format.formatter -> t -> unit
         
   end
 
@@ -271,12 +271,12 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
   | Bot -> true
   | Env e -> Map.is_empty e
 
-  let print ch = function
-  | Bot   -> Printf.fprintf ch "Bot\n"
+  let print fmt = let open Format in function
+  | Bot   -> fprintf fmt "Bot\n"
   | Env m -> 
-      Printf.fprintf ch "Environment:\n";
-      Map.iter (fun v i -> Cfg_printer.print_var ch v; Printf.fprintf ch " ";
-                           V.print ch i; Printf.fprintf ch "\n") m;
+      fprintf fmt "Environment:\n";
+      Map.iter (fun v i -> Cfg_printer.print_var fmt v; fprintf fmt " ";
+                           V.print fmt i; fprintf fmt "\n") m;
 end
 
 module Relational : DOMAIN = Relational_domain

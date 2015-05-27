@@ -6,7 +6,7 @@ module type ITERATOR = sig
 
   type t
 
-  val print : out_channel -> t -> unit
+  val print : Format.formatter -> t -> unit
 
   val iterate : Cfg.cfg -> t
 

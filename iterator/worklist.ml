@@ -9,8 +9,8 @@ module WorklistIter (D : DOMAIN) = struct
 
   type t = D.t Map.t
 
-  let print c =
-    Map.iter (fun n inv -> Printf.printf "Node %d\n" n.node_id; D.print c inv)
+  let print fmt =
+    Map.iter (fun n inv -> Format.fprintf fmt "Node %d\n" n.node_id; D.print fmt inv; Format.fprintf fmt "\n")
 
   module Set = Set.Make
     (struct type t = Cfg.node let compare n1 n2 = compare n1.node_id n2.node_id end)

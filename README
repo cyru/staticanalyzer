@@ -13,9 +13,16 @@ It is supposed that only 1 assert is in the code (for backward analysis)
 
 Implemented : all three features (because group of two)
 
--Apron
--Relationnal
--Backward analysis : implemented for value and constant domain only. It automaticaly does the forward analysis to construct the mapping between the nodes and the domains (for assignments), and then does a backward analysis. We had some problems with the assignment, because we needed the results of the forward analysis to do a backward assignment, and followed the instructions of the course with some help to better understand it in TD. Code can be found in worklist.ml and worklistinter.ml for the backward iterators and some other functions in domain.ml (bwd_assign)
+- Apron
+- Relationnal
+- Backward analysis : implemented for value and constant domain only. It
+  automaticaly does the forward analysis to construct the mapping between the
+  nodes and the domains (for assignments), and then does a backward analysis. 
+  We had some problems with the assignment, because we needed the results of 
+  the forward analysis to do a backward assignment, and followed the 
+  instructions of the course with some help to better understand it in TD. Code
+  can be found in worklist.ml and worklistinter.ml for the backward iterators 
+  and some other functions in domain.ml (bwd_assign)
     
 
 Difficulties met:
@@ -26,3 +33,5 @@ Difficulties met:
   directory where the libraries where
 - Making the interprocedural analysis work required quite a few bug fixes
   because we didn't really read the way the Graph was created.
+- Printing the result was a big problem with a bad interaction between
+  Format and Printf.

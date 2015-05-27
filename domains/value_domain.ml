@@ -84,7 +84,7 @@ module type VALUE_DOMAIN =
     val is_bottom: t -> bool
         
     (* print abstract element *)
-    val print: out_channel -> t -> unit
+    val print: Format.formatter -> t -> unit
       
 end
       

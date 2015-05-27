@@ -235,7 +235,7 @@ let subset a b = match a,b with
 
 let is_bottom i = i == Bot
 
-let print c = function
-  | Bot -> Printf.fprintf c "Bot"
+let print fmt = let open Format in function
+  | Bot -> fprintf fmt "Bot"
   | Itv(a,b) -> 
-      Printf.fprintf c "[%s,%s]" (bound_to_string a) (bound_to_string b)
+      fprintf fmt "[%s,%s]" (bound_to_string a) (bound_to_string b)

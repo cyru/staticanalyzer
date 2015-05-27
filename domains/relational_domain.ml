@@ -46,9 +46,12 @@ let rec expr_to_texpr = function
 (* implementation *)
 
 let init vs = 
-  Abstract1.top 
-    manager 
-    (Environment.make (Array.of_list (List.map var_to_tvar vs)) [||])
+  List.fold_left
+    (fun env v -> Abstract1.assign_texpr manager env (var_to_tvar v) (Texpr1.of_expr (Abstract1.env env) (Texpr1.Cst (Coeff.s_of_int 0))) None)
+    (Abstract1.top 
+      manager 
+      (Environment.make (Array.of_list (List.map var_to_tvar vs)) [||]))
+    vs
 
 let bottom = Abstract1.bottom manager (Environment.make [||] [||])
 
@@ -137,14 +140,23 @@ let bwd_assign m v e dst =
     (expr_to_texpr e)) 
     (Some dst)
 
-let join = Abstract1.join manager
+let join m1 m2 =
+  if Abstract1.is_bottom manager m1 then m2 else
+  if Abstract1.is_bottom manager m2 then m1 else
+  Abstract1.join manager m1 m2
 
-let meet = Abstract1.meet manager
+let meet m1 m2 = 
+  if Abstract1.is_bottom manager m1 then m1 else
+  if Abstract1.is_bottom manager m2 then m2 else
+  Abstract1.meet manager m1 m2
                           
-let widen = Abstract1.widening manager
+let widen m1 m2 =
+  if Abstract1.is_bottom manager m1 then m2 else
+  if Abstract1.is_bottom manager m2 then m1 else
+  Abstract1.widening manager m1 m2
 
 let subset = Abstract1.is_leq manager
 
 let is_bottom = Abstract1.is_bottom manager
 
-let print oc = Abstract1.print (Format.formatter_of_out_channel oc)
+let print fmt env = Abstract1.print fmt env

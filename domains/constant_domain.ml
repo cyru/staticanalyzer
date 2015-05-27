@@ -96,7 +96,8 @@ let subset x y = match (x,y) with
 
 let is_bottom x = x == Bot
 
-let print c = function
-  | Bot   -> Printf.fprintf c "Bot"
-  | Int a -> Printf.fprintf c "%s" (Z.to_string a)
-  | Top   -> Printf.fprintf c "Top"
+let print fmt =
+  let open Format in function
+  | Bot   -> fprintf fmt "Bot"
+  | Int a -> fprintf fmt "%s" (Z.to_string a)
+  | Top   -> fprintf fmt "Top"
