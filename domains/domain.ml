@@ -80,7 +80,7 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
     | CFG_int_binary (op, e1, e2) -> V.binary (eval env e1) (eval env e2) op
     | CFG_int_var v -> 
         begin match env with 
-        | Bot -> failwith "undefined" 
+        | Bot -> V.bottom
         | Env m -> try Map.find v m with Not_found -> Printf.printf "%s\n" v.var_name; failwith "var" end
     | CFG_int_const z    -> V.const z
     | CFG_int_rand (l,h) -> V.rand l h

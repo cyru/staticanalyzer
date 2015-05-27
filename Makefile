@@ -30,7 +30,7 @@ MENHIRFLAGS = --explain
 #
 # (change this if you add new subdirectories or libraries)
 #
-LD = LD_LIBRARY_PATH=/home/varmin/.opam/4.02.0/share/apron/lib
+LD = LD_LIBRARY_PATH=~/.opam/4.02.0/share/apron/lib
 OCAMLINC = -I frontend -I libs -I domains -I iterator
 
 # libraries

@@ -1,6 +1,5 @@
 open Domain
 open Cfg
-open Worklist
 
 module type ITERATOR = sig
 
@@ -14,5 +13,5 @@ module type ITERATOR = sig
 
 end
 
-module Worklist = WorklistIter
+module Worklist = Worklist.WorklistIter
 module WorklistInter = Worklistinter.WorklistIter

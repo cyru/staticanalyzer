@@ -83,8 +83,8 @@ module WorklistIter (D : DOMAIN) = struct
     let cfg = transformCfg cfg' in
     let q = Queue.create () in
     List.iter (fun n -> Queue.push n q) cfg.cfg_nodes;
-    D.print Format.std_formatter (D.init cfg.cfg_vars);
-    Format.fprintf Format.std_formatter "\n";
+    (*D.print Format.std_formatter (D.init cfg.cfg_vars);*)
+    Format.fprintf Format.std_formatter "iterating\n";
     (*D.print Format.std_formatter (D.bottom);*)
     let invs = List.fold_left (fun env n ->
                                Map.add n (D.init cfg.cfg_vars) env)
@@ -124,8 +124,8 @@ module WorklistIter (D : DOMAIN) = struct
       if Queue.is_empty q then invs
       else
         let n = Queue.pop q in let x_i = Map.find n invs in
-        (*Printf.printf "%d\n" n.node_id;*)
-        (*D.print stdout x_i;*)
+        Printf.printf "%d\n" n.node_id; flush stdout;
+        D.print Format.std_formatter x_i;
         let y' = 
           if List.length n.node_in == 0 
           then x_i
