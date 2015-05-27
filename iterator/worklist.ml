@@ -21,10 +21,10 @@ module WorklistIter (D : DOMAIN) = struct
                          let compare n1 n2 = compare n1.node_id n2.node_id end)
 
   let transformCfg = fun x -> x
-  (* simple inter procedural analysis *)
+
   let iterate cfg =
     let q = Queue.create () in
-    List.iter (fun n -> Queue.push n q) cfg.cfg_nodes;
+    (*List.iter (fun n -> Queue.push n q) cfg.cfg_nodes;*)
     (*D.print Format.std_formatter (D.init cfg.cfg_vars);*)
     (*Format.fprintf Format.std_formatter "\n"; *)
     (*D.print Format.std_formatter (D.bottom);*)
@@ -41,7 +41,7 @@ module WorklistIter (D : DOMAIN) = struct
       | CFG_guard(g)    -> D.guard d g
       | CFG_assert(g)   -> let a = D.guard d g in 
                            begin if(a == D.bottom) 
-                             then Printf.printf "Assert failed\n" 
+                             then Format.printf "Assert failed\n" 
                              else () ; a end
       | CFG_call(f)     -> failwith f.func_name in
     (* Compute widening points by using a depth first search algorithm to 
@@ -49,7 +49,7 @@ module WorklistIter (D : DOMAIN) = struct
     let widening_points =
       let to_visit = Queue.create () in
       Queue.push cfg.cfg_init_entry to_visit;
-      (*Printf.printf "%d\n" cfg.cfg_init_entry.node_id;*)
+      Format.printf "%d\n" cfg.cfg_init_entry.node_id;
       let rec visit visited rep =
         if Queue.is_empty to_visit then rep
         else begin 
@@ -66,8 +66,8 @@ module WorklistIter (D : DOMAIN) = struct
       if Queue.is_empty q then invs
       else
         let n = Queue.pop q in let x_i = Map.find n invs in
-        (*Printf.printf "%d\n" n.node_id;*)
-        (*D.print stdout x_i;*)
+        Format.printf "%d\n" n.node_id;
+        D.print Format.std_formatter x_i;
         let y' = 
           if List.length n.node_in == 0 
           then x_i
@@ -106,7 +106,7 @@ module WorklistIter (D : DOMAIN) = struct
       | CFG_assert(g)   -> let b = D.guard d (g) in
                            let a = D.guard d (CFG_bool_unary(AST_NOT, g)) in 
                            begin if a != D.bottom 
-                             then Printf.printf "Assert failed\n" 
+                             then Format.fprintf Format.std_formatter "Assert failed\n" 
                              else () ; b end
       | _               -> failwith "undefined" in
     (* Compute widening points by using a depth first search 

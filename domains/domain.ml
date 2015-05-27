@@ -81,7 +81,7 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
     | CFG_int_var v -> 
         begin match env with 
         | Bot -> V.bottom
-        | Env m -> try Map.find v m with Not_found -> Printf.printf "%s\n" v.var_name; failwith "var" end
+        | Env m -> try Map.find v m with Not_found -> Format.printf "%s\n" v.var_name; failwith "var" end
     | CFG_int_const z    -> V.const z
     | CFG_int_rand (l,h) -> V.rand l h
   
@@ -233,8 +233,8 @@ module NonRelational(V: VALUE_DOMAIN) : DOMAIN = struct
       let (ee2, env2) = backward_expr (ee, fst (V.compare an (V.const Z.zero) AST_LESS_EQUAL)) env in 
       env2
     | CFG_bool_const(bb) -> if bb then env else Bot
-    | CFG_bool_rand -> env (*NOT SURE of that*)
-    | _ -> failwith "impossibl"
+    | CFG_bool_rand -> env 
+    | _ -> failwith "impossible"
       
 
   let guard (env:t) (e:bool_expr) : t = 

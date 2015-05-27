@@ -99,7 +99,7 @@ module WorklistIter (D : DOMAIN) = struct
       | CFG_guard(g)    -> D.guard d g
       | CFG_assert(g)   -> let a = D.guard d g in 
                            begin if(a == D.bottom) 
-                             then Printf.printf "Assert failed\n" 
+                             then Format.fprintf Format.std_formatter "Assert failed\n" 
                              else () ; a end
       | CFG_call(f)     -> failwith f.func_name in
     (* Compute widening points by using a depth first search algorithm to 
@@ -124,7 +124,7 @@ module WorklistIter (D : DOMAIN) = struct
       if Queue.is_empty q then invs
       else
         let n = Queue.pop q in let x_i = Map.find n invs in
-        Printf.printf "%d\n" n.node_id; flush stdout;
+        Format.printf "%d\n" n.node_id; flush stdout;
         D.print Format.std_formatter x_i;
         let y' = 
           if List.length n.node_in == 0 
@@ -163,7 +163,7 @@ module WorklistIter (D : DOMAIN) = struct
       | CFG_assert(g)   -> let b = D.guard d (g) in
                            let a = D.guard d (CFG_bool_unary(AST_NOT, g)) in 
                            begin if a != D.bottom 
-                             then Printf.printf "Assert failed\n" 
+                             then Format.printf "Assert failed\n" 
                              else () ; b end
       | _               -> failwith "undefined" in
     (* Compute widening points by using a depth first search algorithm to 
